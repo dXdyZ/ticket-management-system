@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
@@ -18,10 +18,12 @@ import java.util.Optional;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public ResponseEntity<?> registerUser(UserRegDTO userRegDTO) {
@@ -31,7 +33,7 @@ public class UserService {
                     .username(userRegDTO.getUsername())
                     .email(userRegDTO.getEmail())
                     .role(userRegDTO.getRole())
-                    .password(userRegDTO.getPassword())
+                    .password(passwordEncoder.encode(userRegDTO.getPassword()))
                     .createData(new Date())
                     .build()));
         } else return new ResponseEntity<>("Пользователь с таким именем уже существует", HttpStatus.CONFLICT);
@@ -45,11 +47,19 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    public boolean existsUserByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
     public Users getUserById(Long id) throws ChangeSetPersister.NotFoundException {
-        return userRepository.findById(id).orElseThrow(ChangeSetPersister.NotFoundException::new);
+        Users users = userRepository.findById(id).orElseThrow(ChangeSetPersister.NotFoundException::new);
+        users.setPassword(null);
+        return users;
     }
 
     public Users getUserByName(String username) throws ChangeSetPersister.NotFoundException {
-        return userRepository.findByUsername(username).orElseThrow(ChangeSetPersister.NotFoundException::new);
+        Users users =  userRepository.findByUsername(username).orElseThrow(ChangeSetPersister.NotFoundException::new);
+        users.setPassword(null);
+        return users;
     }
 }

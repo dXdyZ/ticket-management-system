@@ -1,5 +1,12 @@
 package com.another.ticket.entity;
 
-public enum Role {
-    ROLE_CLIENT, ROLE_PERFORMER, ROLE_ADMIN
+import org.springframework.security.core.GrantedAuthority;
+
+public enum Role implements GrantedAuthority {
+    ROLE_CLIENT, ROLE_PERFORMER, ROLE_ADMIN;
+
+    @Override
+    public String getAuthority() {
+        return name();
+    }
 }

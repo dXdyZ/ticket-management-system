@@ -27,6 +27,25 @@ public class TaskController {
         return taskService.createTask(bidDTO, principal);
     }
 
+    @GetMapping("/find")
+    public ResponseEntity<?> getByFilter(@RequestParam(name = "status", required = false) List<String> status,
+                                  @RequestParam(name = "priority", required = false) List<String> priority,
+                                  @RequestParam(name = "username", required = false) String username,
+                                  @RequestParam(name = "creteDate", required = false) String createDate,
+                                  @RequestParam(name = "endDate", required = false) String endDate){
+        if(status == null) {
+            status = List.of();
+        }
+        if (priority == null) {
+            priority = List.of();
+        }
+        try {
+            return ResponseEntity.ok(taskService.getTasksFiltered(status, priority, username, createDate, endDate));
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>("invalid date format", HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @PatchMapping("/get-work/{id}")
     public ResponseEntity<Task> getTaskInWork(@PathVariable Long id, Principal principal) {
         try {

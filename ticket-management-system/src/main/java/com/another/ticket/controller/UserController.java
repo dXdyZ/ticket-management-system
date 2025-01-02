@@ -33,8 +33,8 @@ public class UserController {
         }
     }
 
-    @GetMapping("/{username}")
-    public ResponseEntity<Users> getByName(@PathVariable String username) {
+    @GetMapping
+    public ResponseEntity<Users> getByName(@RequestParam(name = "username") String username) {
         try {
             return ResponseEntity.ok(userService.getUserByName(username));
         } catch (ChangeSetPersister.NotFoundException e) {

@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: ticket-management-system
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ticket
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: root
+    password: werpipl15
+  data:
+    redis:
+      port: 6379
+      host: localhost
+server:
+  port: 9191

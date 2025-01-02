@@ -27,10 +27,15 @@ public class Task {
     @NotNull
     @Size(min = 10, message = "Description must minimum 10 character")
     private String description;
+
+    @Enumerated(EnumType.STRING)
     private Priority priority;
+
+    @Enumerated(EnumType.STRING)
     private Status status;
 
-    private Date createDat;
+    @Temporal(TemporalType.DATE)
+    private Date createDate;
 
     private byte[] investments;
 

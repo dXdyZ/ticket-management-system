@@ -35,9 +35,11 @@ public class Users {
     private String password;
 
     @OneToMany(cascade = CascadeType.ALL)
-    private List<Task> bids;
+    private List<Task> task;
 
+    @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Temporal(TemporalType.DATE)
     private Date createData;
 }
