@@ -1,7 +1,7 @@
 package com.another.ticket.controller;
 
-import com.another.ticket.entity.Task;
 import com.another.ticket.entity.DTO.TaskDTO;
+import com.another.ticket.entity.Task;
 import com.another.ticket.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+
+import static org.springframework.http.HttpStatus.CREATED;
 
 @RestController
 @RequestMapping("/task")
@@ -22,9 +24,11 @@ public class TaskController {
         this.taskService = taskService;
     }
 
+
     @PostMapping("/create")
-    public Task createTask(@RequestBody TaskDTO bidDTO, Principal principal) {
-        return taskService.createTask(bidDTO, principal);
+    public ResponseEntity<Task> createTask(@RequestBody TaskDTO bidDTO, Principal principal) {
+        return new ResponseEntity<>(taskService.createTask(bidDTO, principal),
+                CREATED);
     }
 
     @GetMapping("/find")

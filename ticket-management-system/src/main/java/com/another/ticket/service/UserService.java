@@ -29,13 +29,13 @@ public class UserService {
     public ResponseEntity<?> registerUser(UserRegDTO userRegDTO) {
         Optional<Users> users = userRepository.findByUsername(userRegDTO.getUsername());
         if (users.isEmpty() && !userRegDTO.getRole().equals(Role.ROLE_ADMIN)) {
-            return ResponseEntity.ok(userRepository.save(Users.builder()
+            return new ResponseEntity<>(userRepository.save(Users.builder()
                     .username(userRegDTO.getUsername())
                     .email(userRegDTO.getEmail())
                     .role(userRegDTO.getRole())
                     .password(passwordEncoder.encode(userRegDTO.getPassword()))
                     .createData(new Date())
-                    .build()));
+                    .build()), HttpStatus.CREATED);
         } else return new ResponseEntity<>("Пользователь с таким именем уже существует", HttpStatus.CONFLICT);
     }
 

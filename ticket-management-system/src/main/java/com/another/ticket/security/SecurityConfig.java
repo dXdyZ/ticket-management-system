@@ -2,6 +2,7 @@ package com.another.ticket.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -17,7 +18,18 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(Customizer.withDefaults())
-                .authorizeHttpRequests(c -> c.anyRequest().permitAll())
+                .authorizeHttpRequests(s ->
+                        s.requestMatchers("/user/delete/{id}").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/user/register").permitAll()
+                                .requestMatchers("/user/{id}").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/user").authenticated()
+                                .requestMatchers("/task/create").hasAnyRole("CLIENT", "ADMIN")
+                                .requestMatchers("/task/get-work/{id}", "task/set-status/{id}").hasAnyRole("PERFORMER", "ADMIN")
+                                .requestMatchers("/task/find", "/task/my").authenticated()
+                                .requestMatchers("/task/{id}").authenticated()
+                                .requestMatchers("/error").permitAll()
+                                .anyRequest().permitAll()
+                )
                 .build();
     }
 

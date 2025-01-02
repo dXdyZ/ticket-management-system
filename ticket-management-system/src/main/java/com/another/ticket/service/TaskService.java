@@ -131,11 +131,11 @@ public class TaskService {
                 .status(Status.OPEN)
                 .createDate(new Date())
                 .build());
-
     }
 
     public Task getById(Long id) throws ChangeSetPersister.NotFoundException {
         return taskRepository.findById(id).orElseThrow(ChangeSetPersister.NotFoundException::new);
+
     }
 
     public List<Task> getAllTaskByUser(Principal principal) {

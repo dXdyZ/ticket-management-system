@@ -1,6 +1,7 @@
 package com.another.ticket.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -31,9 +32,11 @@ public class Users {
     @Email
     private String email;
 
-    @NotNull
+    //Убираем это поле из ответов
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(cascade = CascadeType.ALL)
     private List<Task> task;
 
