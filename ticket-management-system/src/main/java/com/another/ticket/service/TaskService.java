@@ -4,7 +4,9 @@ import com.another.ticket.entity.Priority;
 import com.another.ticket.entity.Status;
 import com.another.ticket.entity.Task;
 import com.another.ticket.entity.DTO.TaskDTO;
+import com.another.ticket.rabbit.RabbitMessage;
 import com.another.ticket.repository.TaskRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Pageable;
@@ -23,12 +25,14 @@ import java.util.List;
 public class TaskService {
     private final TaskRepository taskRepository;
     private final UserService userService;
+    private final RabbitMessage rabbitMessage;
     private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy.MM.dd");
 
     @Autowired
-    public TaskService(TaskRepository taskRepository, UserService userService) {
+    public TaskService(TaskRepository taskRepository, UserService userService, RabbitMessage rabbitMessage) {
         this.taskRepository = taskRepository;
         this.userService = userService;
+        this.rabbitMessage = rabbitMessage;
     }
 
     public List<Task> getTaskByStatus(List<String> status) {
@@ -99,25 +103,33 @@ public class TaskService {
     @Transactional
     public Task getInWorkTask(Long id, Principal principal) throws ChangeSetPersister.NotFoundException {
         Task task = taskRepository.findById(id).orElseThrow(ChangeSetPersister.NotFoundException::new);
-        task.setWorkUser(userService.getUserByPrincipal(principal));
-        task.setStatus(Status.AWAITING_RESPONSE);
-        return taskRepository.save(task);
+        if (task.getStatus().equals(Status.OPEN)) {
+            task.setWorkUser(userService.getUserByPrincipal(principal));
+            task.setStatus(Status.AWAITING_RESPONSE);
+            rabbitMessage.sendMailGetTaskInWork(task);
+            return taskRepository.save(task);
+        }
+        return null;
     }
 
     @Transactional
-    public Task setStatus(Long id, String status) throws ChangeSetPersister.NotFoundException {
+    public Task setStatus(Long id, String status, Principal principal) throws ChangeSetPersister.NotFoundException {
         Task task = taskRepository.findById(id).orElseThrow(ChangeSetPersister.NotFoundException::new);
-        if (status.equalsIgnoreCase("CLOSE")) {
-            task.setStatus(Status.CLOSED);
-            taskRepository.save(task);
+        if (task.getWorkUser().getUsername().equalsIgnoreCase(principal.getName()) ||
+                task.getUsers().getUsername().equalsIgnoreCase(principal.getName())) {
+            if (status.equalsIgnoreCase("CLOSE")) {
+                task.setStatus(Status.CLOSED);
+                taskRepository.save(task);
+                return task;
+            }
+            if (status.equalsIgnoreCase("IN JOB")) {
+                task.setStatus(Status.IN_JOB);
+                taskRepository.save(task);
+                return task;
+            }
             return task;
         }
-        if (status.equalsIgnoreCase("IN JOB")) {
-            task.setStatus(Status.IN_JOB);
-            taskRepository.save(task);
-            return task;
-        }
-        return task;
+        return null;
     }
 
     //Ограничить доступ в security всем кроме клиентов
@@ -152,11 +164,19 @@ public class TaskService {
             if (stat.equalsIgnoreCase("mid")) {
                 priorities.add(Priority.MID);
             }
-            if (stat.equalsIgnoreCase("HIGH")) {
+            if (stat.equalsIgnoreCase("high")) {
                 priorities.add(Priority.HIGH);
             }
         }
         return !priorities.isEmpty() ? priorities : null;
+    }
+
+    public void taskAcceptanceConfirmation(Long id, Principal principal) {
+        try {
+            setStatus(id, "in job", principal);
+        } catch (ChangeSetPersister.NotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private List<Status> mapStringInStatus(List<String> status) {

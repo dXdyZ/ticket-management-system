@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: ticket-message-service
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: root
+    password: werpipl15
+  mail:
+    host: smtp.yandex.com
+    port: 465
+    username: AnotherSc@yandex.ru
+    password: cufzeqevxzjpwozi
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.ssl.enable: true
+server:
+  port: 9292

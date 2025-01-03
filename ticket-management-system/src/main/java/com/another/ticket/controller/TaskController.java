@@ -14,6 +14,7 @@ import java.util.List;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
+
 @RestController
 @RequestMapping("/task")
 public class TaskController {
@@ -51,9 +52,12 @@ public class TaskController {
     }
 
     @PatchMapping("/get-work/{id}")
-    public ResponseEntity<Task> getTaskInWork(@PathVariable Long id, Principal principal) {
+    public ResponseEntity<?> getTaskInWork(@PathVariable Long id, Principal principal) {
         try {
-            return ResponseEntity.ok(taskService.getInWorkTask(id, principal));
+            Task task = taskService.getInWorkTask(id, principal);
+            if (task != null) {
+                return ResponseEntity.ok(taskService.getInWorkTask(id, principal));
+            } else return new ResponseEntity<>("Task busy", HttpStatus.CONFLICT);
         } catch (ChangeSetPersister.NotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -61,13 +65,19 @@ public class TaskController {
 
     @PatchMapping("/set-status/{id}")
     public ResponseEntity<Task> setStatus(@PathVariable Long id,
-                                          @RequestBody String status) {
+                                          @RequestBody String status, Principal principal) {
         try {
-            return ResponseEntity.ok(taskService.setStatus(id, status));
+            return ResponseEntity.ok(taskService.setStatus(id, status, principal));
         } catch (ChangeSetPersister.NotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
+    @PostMapping("/taskAcceptanceConfirmation/{id}")
+    public void taskAcceptanceConfirmation(@PathVariable Long id, Principal principal) {
+        taskService.taskAcceptanceConfirmation(id, principal);
+    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Task> getTaskById(@PathVariable Long id) {

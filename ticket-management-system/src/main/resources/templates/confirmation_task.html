@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Информация о задаче</title>
+    <style>
+        /* Общий фон */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f7f9fb;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Контейнер (карточка) */
+        .task-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        /* Шапка */
+        .task-header {
+            background: linear-gradient(90deg, #0E72ED 0%, #458FF6 100%);
+            padding: 20px;
+            color: #fff;
+        }
+        .task-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 400;
+        }
+
+        /* Основное тело */
+        .task-body {
+            padding: 20px;
+        }
+
+        .section-title {
+            margin: 25px 0 10px 0;
+            color: #333;
+            font-size: 18px;
+            font-weight: 500;
+            border-bottom: 1px solid #DDD;
+            padding-bottom: 5px;
+        }
+
+        .info {
+            margin: 8px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info strong {
+            display: inline-block;
+            min-width: 120px;
+            color: #555;
+        }
+
+        /* Кнопка */
+        .btn-primary {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #ffffff;
+            background-color: #0E72ED;
+            text-decoration: none;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background-color: #0c64cf;
+        }
+
+        /* Подвал (необязательно) */
+        .task-footer {
+            background-color: #f1f1f1;
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            border-top: 1px solid #ddd;
+        }
+        .task-footer a {
+            color: #666;
+            text-decoration: none;
+        }
+        .task-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="task-container">
+
+    <!-- Шапка (заголовок) -->
+    <div class="task-header">
+        <h2>Информация о задаче</h2>
+    </div>
+
+    <!-- Основное содержимое -->
+    <div class="task-body">
+
+        <div class="section-title">Данные задачи</div>
+
+        <!-- Поля задачи (отобразим каждое отдельно) -->
+        <div class="info"><strong>ID:</strong> <span id="fieldId"></span></div>
+        <div class="info"><strong>Тема:</strong> <span id="fieldTopic"></span></div>
+        <div class="info"><strong>Описание:</strong> <span id="fieldDescription"></span></div>
+        <div class="info"><strong>Приоритет:</strong> <span id="fieldPriority"></span></div>
+        <div class="info"><strong>Статус:</strong> <span id="fieldStatus"></span></div>
+        <div class="info"><strong>Дата создания:</strong> <span id="fieldCreateDate"></span></div>
+
+        <!-- Кнопка для POST-запроса "Принять в работу" -->
+        <button class="btn-primary" id="acceptTaskBtn">Принять задачу</button>
+
+    </div>
+
+    <!-- (Опционально) Подвал -->
+    <!--
+    <div class="task-footer">
+        <p>© 2023 My Company</p>
+        <p>
+            <a href="#" target="_blank">Условия использования</a> |
+            <a href="#" target="_blank">Связаться с нами</a>
+        </p>
+    </div>
+    -->
+
+</div>
+
+<script>
+    // 1. Получаем ID задачи из URL (например, /task/10).
+    const pathParts = window.location.pathname.split('/');
+    const taskId = pathParts[2]; // "10"
+
+    // 2. Функция для загрузки данных задачи (GET /task/{id})
+    function loadTask(taskId) {
+        fetch(`http://localhost:9191/task/${taskId}`, {
+            method: 'GET',
+            credentials: 'include' // Для form-based auth (куки/сессия)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        // Не авторизован — перенаправляем на /login
+                        window.location.href = 'http://localhost:9191/login';
+                        return;
+                    }
+                    throw new Error(`Ошибка загрузки задачи: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Размещаем данные по полям на странице
+                document.getElementById('fieldId').textContent = data.id;
+                document.getElementById('fieldTopic').textContent = data.topic;
+                document.getElementById('fieldDescription').textContent = data.description;
+                document.getElementById('fieldPriority').textContent = data.priority;
+                document.getElementById('fieldStatus').textContent = data.status;
+                document.getElementById('fieldCreateDate').textContent = data.createDate;
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Ошибка при получении задачи: ' + err.message);
+            });
+    }
+
+    // 3. Функция для принятия задачи (POST /task/taskAcceptanceConfirmation/{id})
+    function acceptTask(taskId) {
+        fetch(`http://localhost:9191/task/taskAcceptanceConfirmation/${taskId}`, {
+            method: 'POST',
+            credentials: 'include'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        window.location.href = 'http://localhost:9191/login';
+                        return;
+                    }
+                    throw new Error(`Ошибка принятия задачи: ${response.status}`);
+                }
+                return response.text(); // или response.json()
+            })
+            .then(result => {
+                alert('Задача принята в работу!\n\nОтвет сервера:\n' + result);
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Ошибка при принятии задачи: ' + err.message);
+            });
+    }
+
+    // 4. Обработчик клика на кнопку
+    document.getElementById('acceptTaskBtn').addEventListener('click', () => {
+        acceptTask(taskId);
+    });
+
+    // 5. Загружаем данные задачи при старте
+    loadTask(taskId);
+</script>
+
+</body>
+</html>

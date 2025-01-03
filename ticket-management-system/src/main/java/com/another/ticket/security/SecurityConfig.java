@@ -23,13 +23,15 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/user/register").permitAll()
                                 .requestMatchers("/user/{id}").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/user").authenticated()
-                                .requestMatchers("/task/create").hasAnyRole("CLIENT", "ADMIN")
+                                .requestMatchers("/task/create", "/task/taskAcceptanceConfirmation/{id}",
+                                        "/conf-task").hasAnyRole("CLIENT", "ADMIN")
                                 .requestMatchers("/task/get-work/{id}", "task/set-status/{id}").hasAnyRole("PERFORMER", "ADMIN")
                                 .requestMatchers("/task/find", "/task/my").authenticated()
                                 .requestMatchers("/task/{id}").authenticated()
                                 .requestMatchers("/error").permitAll()
                                 .anyRequest().permitAll()
                 )
+                .formLogin(Customizer.withDefaults())
                 .build();
     }
 
