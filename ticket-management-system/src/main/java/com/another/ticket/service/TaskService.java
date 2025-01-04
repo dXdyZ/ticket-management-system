@@ -119,12 +119,12 @@ public class TaskService {
                 task.getUsers().getUsername().equalsIgnoreCase(principal.getName())) {
             if (status.equalsIgnoreCase("CLOSE")) {
                 task.setStatus(Status.CLOSED);
-                taskRepository.save(task);
+                rabbitMessage.sendSetStatusTask(taskRepository.save(task));
                 return task;
             }
             if (status.equalsIgnoreCase("IN JOB")) {
                 task.setStatus(Status.IN_JOB);
-                taskRepository.save(task);
+                rabbitMessage.sendSetStatusTask(taskRepository.save(task));
                 return task;
             }
             return task;
@@ -135,7 +135,7 @@ public class TaskService {
     //Ограничить доступ в security всем кроме клиентов
     @Transactional
     public Task createTask(TaskDTO bidDTO, Principal principal) {
-        return taskRepository.save(Task.builder()
+        Task task = taskRepository.save(Task.builder()
                 .topic(bidDTO.getTopic())
                 .users(userService.getUserByPrincipal(principal))
                 .description(bidDTO.getDescription())
@@ -143,6 +143,8 @@ public class TaskService {
                 .status(Status.OPEN)
                 .createDate(new Date())
                 .build());
+        rabbitMessage.sendCreateTask(task);
+        return task;
     }
 
     public Task getById(Long id) throws ChangeSetPersister.NotFoundException {

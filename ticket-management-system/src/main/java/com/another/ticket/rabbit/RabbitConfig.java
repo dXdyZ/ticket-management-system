@@ -12,6 +12,12 @@ public class RabbitConfig {
     @Value("${queue.name.emailGetTaskInWork}")
     private String emailGetTaskInWork;
 
+    @Value("${queue.name.CreateTask}")
+    private String createTask;
+
+    @Value("${queue.name.SetStatusTask}")
+    private String setStatusTask;
+
     @Value("${spring.rabbitmq.username}")
     private String username;
 
@@ -24,6 +30,16 @@ public class RabbitConfig {
     @Bean
     public Queue sendMailGetTaskInWork() {
         return new Queue(emailGetTaskInWork, false);
+    }
+
+    @Bean
+    public Queue sendMailCreateTask() {
+        return new Queue(createTask, false);
+    }
+
+    @Bean
+    public Queue sendMailSetStatusTask() {
+        return new Queue(setStatusTask, false);
     }
 
     @Bean

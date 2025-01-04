@@ -14,6 +14,12 @@ public class RabbitMessage {
     @Value("${queue.name.emailGetTaskInWork}")
     private String sendMailGetTaskInWork;
 
+    @Value("${queue.name.CreateTask}")
+    private String sendCreateTask;
+
+    @Value("${queue.name.SetStatusTask}")
+    private String sendSetStatusTask;
+
     @Autowired
     public RabbitMessage(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
@@ -21,5 +27,13 @@ public class RabbitMessage {
 
     public void sendMailGetTaskInWork(Task task) {
         rabbitTemplate.convertAndSend(sendMailGetTaskInWork, task);
+    }
+
+    public void sendCreateTask(Task task) {
+        rabbitTemplate.convertAndSend(sendCreateTask, task);
+    }
+
+    public void sendSetStatusTask(Task task) {
+        rabbitTemplate.convertAndSend(sendSetStatusTask, task);
     }
 }
