@@ -53,6 +53,35 @@ services:
       - postgres
     restart: no
 
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin    # Имя пользователя для админ-доступа
+      MONGO_INITDB_ROOT_PASSWORD: password # Пароль для админ-доступа
+    command: mongod --bind_ip_all
+    volumes:
+      - mongodb_data:/data/db              # Хранение данных на хосте
+      - mongodb_config:/data/configdb      # Конфигурационные данные
+      - ./init-scripts:/docker-entrypoint-initdb.d # Скрипты инициализации
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: no
+    ports:
+      - "8081:8081" # Порт для веб-интерфейса
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin    # Имя пользователя MongoDB
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password # Пароль MongoDB
+      ME_CONFIG_MONGODB_SERVER: mongodb         # Хост MongoDB (имя сервиса)
+      ME_CONFIG_MONGODB_AUTH_DATABASE: admin  # Явно указать базу аутентификации
+
 volumes:
   postgres_data:
+  mongodb_data:
+  mongodb_config:
 

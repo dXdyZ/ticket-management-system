@@ -1,6 +1,14 @@
 spring:
   application:
     name: ticket-message-service
+  data:
+    mongodb:
+      uri: mongodb://app_user:ticket_bd@localhost:27017/ticket_bd
+      database: ticket_bd
+      auto-index-creation: true
+  jpa:
+    hibernate:
+      ddl-auto: update
   rabbitmq:
     host: localhost
     port: 5672
