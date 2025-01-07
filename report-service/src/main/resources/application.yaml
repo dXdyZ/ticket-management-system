@@ -6,12 +6,16 @@ spring:
     username: admin
     password: admin
     driver-class-name: org.postgresql.Driver
-  spring:
-    jpa:
-      properties:
-        hibernate:
-          jdbc:
-            batch_size=1000:
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          batch_size=1000:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: root
+    password: werpipl15
 logging:
   file:
     name: report_log.log
@@ -19,3 +23,11 @@ logging:
     org.springframework: error
 server:
   port: 9393
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+queue:
+  name:
+    SendMailReport: MessageSendMailReport
+

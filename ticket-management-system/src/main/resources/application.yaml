@@ -28,3 +28,5 @@ queue:
     emailGetTaskInWork: MessageEmailGetTaskInWork
     CreateTask: MessageCreateTask
     SetStatusTask: MessageSetStatusTask
+    GetStatusLog: MessageGetStatusLogData
+    SendMailReport: MessageSendMailReport

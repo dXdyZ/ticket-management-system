@@ -4,6 +4,7 @@ import com.another.ticketmessageservice.component.MapingDate;
 import com.another.ticketmessageservice.entity.Status;
 import com.another.ticketmessageservice.entity.Task;
 import com.another.ticketmessageservice.entity.bd_entity.StatusLog;
+import com.another.ticketmessageservice.rabbit.RabbitSenderMessage;
 import com.another.ticketmessageservice.repository.CustomStatusLogRepository;
 import com.another.ticketmessageservice.repository.StatusLogRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,8 @@ public class StatusLogService {
     private final CustomStatusLogRepository customStatusLogRepository;
 
     @Autowired
-    public StatusLogService(StatusLogRepository statusLogRepository, CustomStatusLogRepository customStatusLogRepository) {
+    public StatusLogService(StatusLogRepository statusLogRepository,
+                            CustomStatusLogRepository customStatusLogRepository) {
         this.statusLogRepository = statusLogRepository;
         this.customStatusLogRepository = customStatusLogRepository;
     }

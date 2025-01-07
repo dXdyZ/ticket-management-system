@@ -18,6 +18,12 @@ public class RabbitConfig {
     @Value("${queue.name.SetStatusTask}")
     private String setStatusTask;
 
+    @Value("${queue.name.GetStatusLog}")
+    private String getStatusLogData;
+
+    @Value("${queue.name.SendMailReport}")
+    private String sendMailReport;
+
     @Value("${spring.rabbitmq.username}")
     private String username;
 
@@ -40,6 +46,16 @@ public class RabbitConfig {
     @Bean
     public Queue sendMailSetStatusTask() {
         return new Queue(setStatusTask, false);
+    }
+
+    @Bean
+    public Queue getStatusLogQueue() {
+        return new Queue(getStatusLogData, false);
+    }
+
+    @Bean
+    public Queue sendMailReport() {
+        return new Queue(sendMailReport, false);
     }
 
     @Bean

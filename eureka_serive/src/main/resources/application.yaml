@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: eureka_serive
+server:
+  port: 8761
+eureka:
+  client:
+    register-with-eureka: false #сервер не регистрирует себя
+    fetch-registry: false  # Сервер не синхронизирует список сервисов

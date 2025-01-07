@@ -20,4 +20,5 @@ public class ProcessingTaskReportEntity {
     private LocalDateTime createDate;
     private LocalDateTime offToWorkTime;
     private LocalDateTime closed;
+    private String completedTime;
 }

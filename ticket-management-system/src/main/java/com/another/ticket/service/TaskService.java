@@ -143,7 +143,7 @@ public class TaskService {
                 .status(Status.OPEN)
                 .createDate(new Date())
                 .build());
-        rabbitMessage.sendCreateTask(task);
+        //rabbitMessage.sendCreateTask(task);
         return task;
     }
 

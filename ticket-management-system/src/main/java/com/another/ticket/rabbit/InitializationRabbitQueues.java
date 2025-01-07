@@ -13,16 +13,22 @@ public class InitializationRabbitQueues {
     private final Queue queueEmailTaskInWork;
     private final Queue queueCreateTask;
     private final Queue queueSetStatusTask;
+    private final Queue queueGetStatusLogData;
+    private final Queue queueSendMailReport;
 
     @Autowired
     public InitializationRabbitQueues(RabbitAdmin rabbitAdmin,
                                       @Qualifier("sendMailGetTaskInWork") Queue queueEmailTaskInWork,
                                       @Qualifier("sendMailCreateTask") Queue queueCreateTask,
-                                      @Qualifier("sendMailSetStatusTask") Queue queueSetStatusTask) {
+                                      @Qualifier("sendMailSetStatusTask") Queue queueSetStatusTask,
+                                      @Qualifier("getStatusLogQueue") Queue queueGetStatusLogData,
+                                      @Qualifier("sendMailReport") Queue queueSendMailReport) {
         this.rabbitAdmin = rabbitAdmin;
         this.queueEmailTaskInWork = queueEmailTaskInWork;
         this.queueCreateTask = queueCreateTask;
         this.queueSetStatusTask = queueSetStatusTask;
+        this.queueGetStatusLogData = queueGetStatusLogData;
+        this.queueSendMailReport = queueSendMailReport;
     }
 
     @PostConstruct
@@ -30,5 +36,7 @@ public class InitializationRabbitQueues {
         rabbitAdmin.declareQueue(queueEmailTaskInWork);
         rabbitAdmin.declareQueue(queueCreateTask);
         rabbitAdmin.declareQueue(queueSetStatusTask);
+        rabbitAdmin.declareQueue(queueGetStatusLogData);
+        rabbitAdmin.declareQueue(queueSendMailReport);
     }
 }

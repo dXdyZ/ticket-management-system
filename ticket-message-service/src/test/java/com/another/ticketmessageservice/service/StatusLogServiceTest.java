@@ -41,11 +41,7 @@ class StatusLogServiceTest {
     }
 
     @Test
-    public void getProcessingTime() {
-        LocalDateTime startTime = LocalDateTime.now();
-        LocalDateTime endTime = LocalDateTime.of(2025, Month.JANUARY, 10, 11, 45, 45);
-        if (startTime != null && endTime != null) {
-            log.info("date: {}",Duration.between(startTime, endTime));
-        }
+    void test() {
+        log.info("get data from bd: {}", statusLogRepository.findAll());
     }
 }

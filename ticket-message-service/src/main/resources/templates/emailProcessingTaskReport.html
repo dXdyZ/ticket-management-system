@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Информация о задаче</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f7f9fb;
+            font-family: Arial, sans-serif;
+        }
+
+        .email-container {
+            width: 100%;
+            max-width: 1200px; /* Увеличено для большей ширины таблицы */
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .email-header {
+            background-color: #0E72ED;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .email-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 400;
+        }
+
+        .email-body {
+            padding: 20px;
+        }
+
+        table {
+            width: 100%; /* Таблица занимает всю ширину */
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px 15px; /* Больше пространства между текстом и ячейкой */
+            text-align: left;
+            border: 1px solid #ddd; /* Добавлены границы для улучшения читаемости */
+            word-break: break-word; /* Перенос слов */
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+            white-space: nowrap; /* Оставляет заголовки в одну строку, пока есть место */
+            text-overflow: ellipsis;
+        }
+
+        td {
+            word-break: break-word; /* Перенос текста в ячейках */
+        }
+
+        .btn-primary {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #ffffff;
+            background-color: #0E72ED;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .btn-primary:hover {
+            background-color: #0c64cf;
+        }
+    </style>
+</head>
+<body>
+
+<div class="email-container">
+
+
+    <!-- Шапка письма -->
+    <div class="email-header">
+        <h2>Информация о задаче</h2>
+    </div>
+
+    <!-- Основное тело письма -->
+    <div class="email-body">
+
+        <!-- Таблица с задачами -->
+        <div>
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Тема</th>
+                    <th>Статус</th>
+                    <th>Исполнитель</th>
+                    <th>Дата создания</th>
+                    <th>Дата начала работы</th>
+                    <th>Дата завершения</th>
+                    <th>Время выполнения</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="task : ${tasks}">
+                    <td th:text="${task.taskId}">1</td>
+                    <td th:text="${task.topic}">Пример темы</td>
+                    <td th:text="${task.status}">Открыто</td>
+                    <td th:text="${task.workerUsername}">Имя исполнителя</td>
+
+                    <!-- Форматируем дату создания -->
+                    <td>
+                        <span th:text="${#temporals.format(task.createDate, 'yyyy.MM.dd')}">2025.01.07</span><br/>
+                        <span th:text="${#temporals.format(task.createDate, 'HH:mm')}">07:19</span>
+                    </td>
+
+                    <!-- Форматируем дату начала работы -->
+                    <td>
+                        <span th:text="${#temporals.format(task.offToWorkTime, 'yyyy.MM.dd')}">2025.01.07</span><br/>
+                        <span th:text="${#temporals.format(task.offToWorkTime, 'HH:mm')}">07:19</span>
+                    </td>
+
+                    <!-- Форматируем дату завершения -->
+                    <td>
+                        <span th:text="${#temporals.format(task.closed, 'yyyy.MM.dd')}">2025.01.07</span><br/>
+                        <span th:text="${#temporals.format(task.closed, 'HH:mm')}">07:19</span>
+                    </td>
+
+                    <td th:text="${task.completedTime}">1</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

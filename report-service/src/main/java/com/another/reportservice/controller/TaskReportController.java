@@ -25,6 +25,6 @@ public class TaskReportController {
                                                         @PathVariable String end,
                                                         @RequestParam(name = "username", required = false) String username)
             throws ChangeSetPersister.NotFoundException, ExecutionException, InterruptedException {
-        return reportTaskService.getReportNumberOfRegisterUserPeriod(start, end, username);
+        return reportTaskService.getReportNumberOfCreateTaskPeriod(start, end, username);
     }
 }

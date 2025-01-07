@@ -43,6 +43,7 @@ public class Users {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    //Поменять на LocalDateTime
     @Temporal(TemporalType.DATE)
     private Date createData;
 }
