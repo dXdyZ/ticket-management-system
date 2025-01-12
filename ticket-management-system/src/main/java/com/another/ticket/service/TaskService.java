@@ -1,22 +1,24 @@
 package com.another.ticket.service;
 
+import com.another.ticket.entity.DTO.TaskDTO;
 import com.another.ticket.entity.Priority;
 import com.another.ticket.entity.Status;
 import com.another.ticket.entity.Task;
-import com.another.ticket.entity.DTO.TaskDTO;
 import com.another.ticket.rabbit.RabbitMessage;
 import com.another.ticket.repository.TaskRepository;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.Principal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -26,13 +28,17 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final UserService userService;
     private final RabbitMessage rabbitMessage;
+    private final RestTemplate restTemplate;
     private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy.MM.dd");
+    private final String mainUrl = "http://report-service/tasks";
 
     @Autowired
-    public TaskService(TaskRepository taskRepository, UserService userService, RabbitMessage rabbitMessage) {
+    public TaskService(TaskRepository taskRepository, UserService userService,
+                       RabbitMessage rabbitMessage, RestTemplate restTemplate) {
         this.taskRepository = taskRepository;
         this.userService = userService;
         this.rabbitMessage = rabbitMessage;
+        this.restTemplate = restTemplate;
     }
 
     public List<Task> getTaskByStatus(List<String> status) {
@@ -101,7 +107,7 @@ public class TaskService {
 
     //Ограничить доступ в security всем кроме исполнителей
     @Transactional
-    public Task getInWorkTask(Long id, Principal principal) throws ChangeSetPersister.NotFoundException {
+    public Task takeInWorkTask(Long id, Principal principal) throws ChangeSetPersister.NotFoundException {
         Task task = taskRepository.findById(id).orElseThrow(ChangeSetPersister.NotFoundException::new);
         if (task.getStatus().equals(Status.OPEN)) {
             task.setWorkUser(userService.getUserByPrincipal(principal));
@@ -119,11 +125,15 @@ public class TaskService {
                 task.getUsers().getUsername().equalsIgnoreCase(principal.getName())) {
             if (status.equalsIgnoreCase("CLOSE")) {
                 task.setStatus(Status.CLOSED);
+                task.setCloseDate(LocalDateTime.now());
                 rabbitMessage.sendSetStatusTask(taskRepository.save(task));
                 return task;
             }
             if (status.equalsIgnoreCase("IN JOB")) {
                 task.setStatus(Status.IN_JOB);
+                if (task.getInJobDate() == null) {
+                    task.setInJobDate(LocalDateTime.now());
+                }
                 rabbitMessage.sendSetStatusTask(taskRepository.save(task));
                 return task;
             }
@@ -141,9 +151,9 @@ public class TaskService {
                 .description(bidDTO.getDescription())
                 .priority(bidDTO.getPriority())
                 .status(Status.OPEN)
-                .createDate(new Date())
+                .createDate(LocalDateTime.now())
                 .build());
-        //rabbitMessage.sendCreateTask(task);
+        rabbitMessage.sendCreateTask(task);
         return task;
     }
 
@@ -198,5 +208,23 @@ public class TaskService {
             }
         }
         return !statusList.isEmpty() ? statusList : null;
+    }
+
+    public void getTaskReportForPeriod(String start, String end, String username, Principal principal) {
+        String url = UriComponentsBuilder.fromUriString(mainUrl)
+                .pathSegment("period", start, end, userService.getUserByPrincipal(principal).getEmail())
+                .toUriString();
+        if (username != null) {
+            url = url + "?username=" + username;
+        }
+        restTemplate.getForObject(url, Void.class);
+    }
+
+    public void getReportTaskProcessing(String start, String end, Principal principal) {
+        restTemplate.getForObject(
+                UriComponentsBuilder.fromUriString(mainUrl)
+                .pathSegment("processing", start, end, userService.getUserByPrincipal(principal).getEmail())
+                        .toUriString(),
+                Void.class);
     }
 }

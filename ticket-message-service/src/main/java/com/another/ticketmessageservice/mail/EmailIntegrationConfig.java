@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import java.util.Collection;
+import java.io.File;
 
 @Slf4j
 @Service
@@ -29,26 +29,25 @@ public class EmailIntegrationConfig {
         this.templateEngine = templateEngine;
     }
 
-    public void sendReport(Object report, String email, String topic, String htmlFileName) {
-        Context context = new Context();
-        if (report instanceof Collection) {
-            context.setVariable("tasks", report);
-        } else {
-            context.setVariable("tasks", report);
-        }
-        createEmailMessage(context, email, topic, htmlFileName);
+
+    public void sendReport(File report, String email, String topic) {
+        createEmailMessage(null, email, topic, null, report);
     }
 
-    public void sendTaskMessage(Task task, String recipientEmail) throws MessagingException {
+    public void sendBugReportForUser(String userEmail) {
+        createEmailMessage(new Context(), userEmail, "Ошибка во время создания отчета", "bug_report.html", null);
+    }
+
+    public void sendTaskMessage(Task task, String recipientEmail) {
         Context context = new Context();
         context.setVariable("task", task);
         String link = "http://localhost:9191/conf-task/" + task.getId();
         context.setVariable("taskLink", link);
-        createEmailMessage(context, recipientEmail, "Бронирование задачи", "emailTaskTemplate.html");
+        createEmailMessage(context, recipientEmail, "Бронирование задачи", "emailTaskTemplate.html", null);
 
     }
 
-    private void createEmailMessage(Context context, String email, String topic, String htmlFileName)  {
+    private void createEmailMessage(Context context, String email, String topic, String htmlFileName, File file)  {
         //1. Create mimeMessage
         try {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
@@ -59,13 +58,18 @@ public class EmailIntegrationConfig {
             mimeMessageHelper.setTo(email);
             mimeMessageHelper.setFrom(fromMail);
 
-            String htmlBody = templateEngine.process(htmlFileName, context);
 
-            //5. Устанавливаем HTML-body
-            mimeMessageHelper.setText(htmlBody, true);
-
-            //Send mail
-            javaMailSender.send(mimeMessage);
+            if (file == null) {
+                String htmlBody = templateEngine.process(htmlFileName, context);
+                //5. Устанавливаем HTML-body
+                mimeMessageHelper.setText(htmlBody, true);
+                //Send mail
+                javaMailSender.send(mimeMessage);
+            } else {
+                mimeMessageHelper.setText(topic);
+                mimeMessageHelper.addAttachment(file.getName(), file);
+                javaMailSender.send(mimeMessage);
+            }
         } catch (MessagingException e) {
             throw new RuntimeException(e);
         }

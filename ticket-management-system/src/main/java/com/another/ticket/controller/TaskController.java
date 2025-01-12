@@ -16,7 +16,7 @@ import static org.springframework.http.HttpStatus.CREATED;
 
 
 @RestController
-@RequestMapping("/task")
+@RequestMapping("/tasks")
 public class TaskController {
     private final TaskService taskService;
 
@@ -51,12 +51,12 @@ public class TaskController {
         }
     }
 
-    @PatchMapping("/get-work/{id}")
-    public ResponseEntity<?> getTaskInWork(@PathVariable Long id, Principal principal) {
+    @PatchMapping("/take-work/{id}")
+    public ResponseEntity<?> takeTaskInWork(@PathVariable Long id, Principal principal) {
         try {
-            Task task = taskService.getInWorkTask(id, principal);
+            Task task = taskService.takeInWorkTask(id, principal);
             if (task != null) {
-                return ResponseEntity.ok(taskService.getInWorkTask(id, principal));
+                return ResponseEntity.ok(taskService.takeInWorkTask(id, principal));
             } else return new ResponseEntity<>("Task busy", HttpStatus.CONFLICT);
         } catch (ChangeSetPersister.NotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -91,6 +91,20 @@ public class TaskController {
     @GetMapping("/my")
     public List<Task> getAllByUserTask(Principal principal) {
         return taskService.getAllTaskByUser(principal);
+    }
+
+    @GetMapping("/report/period/{start}/{end}")
+    public void getTaskReportForPeriod(@PathVariable String start,
+                                       @PathVariable String end,
+                                       @RequestParam(value = "username", required = false) String username,
+                                       Principal principal) {
+        taskService.getTaskReportForPeriod(start, end, username, principal);
+    }
+
+    @GetMapping("/report/processing/{start}/{end}")
+    public void getTaskProcessingReport(@PathVariable String start,
+                                        @PathVariable String end, Principal principal) {
+        taskService.getReportTaskProcessing(start, end, principal);
     }
 }
 

@@ -30,4 +30,6 @@ eureka:
 queue:
   name:
     SendMailReport: MessageSendMailReport
+path:
+  report: /home/another/dev/developering/ticket-management-system/report/
 

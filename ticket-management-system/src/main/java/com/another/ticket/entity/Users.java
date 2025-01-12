@@ -11,7 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -43,7 +43,6 @@ public class Users {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    //Поменять на LocalDateTime
-    @Temporal(TemporalType.DATE)
-    private Date createData;
+
+    private LocalDateTime createData;
 }

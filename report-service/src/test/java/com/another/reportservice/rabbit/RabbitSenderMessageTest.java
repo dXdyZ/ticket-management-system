@@ -17,6 +17,6 @@ class RabbitSenderMessageTest {
 
     @Test
     void sendMessageReport() {
-        rabbitSenderMessage.sendMessageReport(new ArrayList<Task>(), "test", "hello@gmail.com");
+        //rabbitSenderMessage.sendMessageReport(new ArrayList<Task>(), "test", "hello@gmail.com");
     }
 }

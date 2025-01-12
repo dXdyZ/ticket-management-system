@@ -9,8 +9,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/users")
 public class UserController {
     private final UserService userService;
 
@@ -45,6 +47,19 @@ public class UserController {
     @DeleteMapping("/delete/{id}")
     public void deleteUserById(@PathVariable Long id) {
         userService.deleteUserByName(id);
+    }
+
+    @GetMapping("/report/period/{start}/{end}")
+    public void getCreateUserReportForPeriod(@PathVariable String start,
+                                             @PathVariable String end,
+                                             Principal principal) {
+        userService.getCreateUserReportForPeriod(start, end, principal);
+    }
+
+    @GetMapping("/report/efficiency/{username}")
+    public void getEfficiencyUserReport(@PathVariable String username,
+                                             Principal principal) {
+        userService.getEfficiencyUserReport(username, principal);
     }
 }
 

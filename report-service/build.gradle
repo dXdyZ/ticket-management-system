@@ -28,6 +28,8 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.apache.poi:poi:5.3.0'
+    implementation 'org.apache.poi:poi-ooxml:5.3.0'
     implementation 'net.andreinc:mockneat:0.4.8'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

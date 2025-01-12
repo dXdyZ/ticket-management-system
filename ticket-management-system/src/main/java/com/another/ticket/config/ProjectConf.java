@@ -1,4 +1,4 @@
-package com.another.reportservice.config;
+package com.another.ticket.config;
 
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;

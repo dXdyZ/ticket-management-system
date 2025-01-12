@@ -30,4 +30,9 @@ eureka:
       defaultZone: http://localhost:8761/eureka
 server:
   port: 9292
+logging:
+  level:
+    com.rabbitmq: debug
+  file:
+    name: ticket-file.log
 

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -28,8 +29,11 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Temporal(TemporalType.DATE)
-    private LocalDate createDate;
+    private LocalDateTime createDate;
+
+    private LocalDateTime inJobDate;
+
+    private LocalDateTime closeDate;
 
     private byte[] investments;
 

@@ -21,11 +21,11 @@ public class RabbitSenderMessage {
     @Value("${queue.name.SendMailReport}")
     private String mailReport;
 
-    public void sendMessageReport(Object report, String objectName, String userEmail) {
+    public void sendMessageReport(String report, String topicForReport, String userEmail) {
         Map<String, Object> headers = new HashMap<>() {
             {
-                put("OBJECT_NAME", objectName);
                 put("USER_EMAIL", userEmail);
+                put("TOPIC_REPORT", topicForReport);
             }
         };
         rabbitTemplate.convertAndSend(mailReport, report,

@@ -1,17 +1,15 @@
 package com.another.reportservice.controller;
 
-import com.another.reportservice.entity.reportEntity.TaskPeriodReportEntity;
 import com.another.reportservice.service.reportService.ReportTaskService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.ExecutionException;
 
-@Slf4j
+
 @RestController
-@RequestMapping("/task")
+@RequestMapping("/tasks")
 public class TaskReportController {
     private final ReportTaskService reportTaskService;
 
@@ -20,11 +18,19 @@ public class TaskReportController {
         this.reportTaskService = reportTaskService;
     }
 
-    @GetMapping("/{start}/{end}")
-    public TaskPeriodReportEntity getTaskReportByPeriod(@PathVariable String start,
+    @GetMapping("/period/{start}/{end}/{userEmail}")
+    public void getTaskReportByPeriod(@PathVariable String start,
+                                                        @PathVariable String userEmail,
                                                         @PathVariable String end,
                                                         @RequestParam(name = "username", required = false) String username)
             throws ChangeSetPersister.NotFoundException, ExecutionException, InterruptedException {
-        return reportTaskService.getReportNumberOfCreateTaskPeriod(start, end, username);
+        reportTaskService.getReportNumberOfCreateTaskPeriod(start, end, username, userEmail);
+    }
+
+    @GetMapping("/processing/{start}/{end}/{userEmail}")
+    public void getTaskProcessingReport(@PathVariable String start,
+                                    @PathVariable String end,
+                                    @PathVariable String userEmail) {
+        reportTaskService.getAndSendProcessingTaskReport(start, end, userEmail);
     }
 }

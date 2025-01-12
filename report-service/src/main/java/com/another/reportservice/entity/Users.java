@@ -9,10 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.Month;
-import java.time.ZoneId;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -40,10 +36,5 @@ public class Users {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @Temporal(TemporalType.DATE)
     private LocalDate createData;
-
-    public Month getMontyEnum() {
-        return createData.getMonth();
-    }
 }
