@@ -12,6 +12,10 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @Component
 public class PushTelegramBot extends TelegramLongPollingBot {
 
+    private static final String START = "/start";
+    private static final String LOGIN = "/login";
+
+
     public PushTelegramBot(@Value("${telegram.bot.token}") String botToken) {
         super(botToken);
     }
