@@ -13,5 +13,5 @@ public class PerformerEfficiencyReport {
     private Long successfulImplementation;
     private Long hiredTask;
     private Double AVGCompletionTime;
-    private Double userRating;
+    private Integer userRating;
 }

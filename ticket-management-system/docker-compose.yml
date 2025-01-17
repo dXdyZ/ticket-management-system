@@ -56,7 +56,7 @@ services:
   mongodb:
     image: mongo:latest
     container_name: mongodb
-    restart: always
+    restart: no
     ports:
       - "27017:27017"
     environment:
@@ -79,7 +79,6 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: password # Пароль MongoDB
       ME_CONFIG_MONGODB_SERVER: mongodb         # Хост MongoDB (имя сервиса)
       ME_CONFIG_MONGODB_AUTH_DATABASE: admin  # Явно указать базу аутентификации
-
 volumes:
   postgres_data:
   mongodb_data:

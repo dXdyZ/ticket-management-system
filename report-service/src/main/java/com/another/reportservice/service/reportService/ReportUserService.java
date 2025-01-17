@@ -1,6 +1,7 @@
 package com.another.reportservice.service.reportService;
 
 
+import com.another.reportservice.custom_exception.FutureDateException;
 import com.another.reportservice.entity.Role;
 import com.another.reportservice.entity.Task;
 import com.another.reportservice.entity.Users;
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
@@ -40,33 +42,39 @@ public class ReportUserService {
         this.excelReportService = excelReportService;
     }
 
-    public void getReportNumberOfRegisterUserPeriod(String start, String end, String userEmail) {
+    public void getReportNumberOfRegisterUserPeriod(String start, String end, String userEmail) throws FutureDateException {
         List<LocalDateTime> dates = MapDate.mapDate(start, end);
         List<Users> users = userService.getUserBetweenDate(dates.get(0).toLocalDate(), dates.get(1).toLocalDate());
         rabbitSenderMessage.sendMessageReport(excelReportService.createUserPeriodReportExcel(UserPeriodReportEntity.builder()
-                .quantityUsers(Long.valueOf(users.size() + 1))
+                .quantityUsers((long) (users.size() + 1))
                 .registerUserByMonth(partitionUserByMonth(users))
                 .registerUserByRoleMonth(partitionUserByRole(users))
                 .build(), "Количество_зарегистрированных_пользователй_за:" + start + "_" + end),
                 "Количество зарегистрированных пользователй за период", userEmail);
     }
 
-    public void getReportPerformerEfficiencyUser(String username, String userEmail) {
-        log.info("user name for method: {}", username);
+    public void getReportPerformerEfficiencyUser(String username, String userEmail) throws NoSuchElementException {
+        Users users = userService.getUserByUsername(username);
         List<Task> tasksByClosed = taskService.getTaskByClosedAndUsername(username);
         List<Task> taskByUser = taskService.getByUsername(username);
-        double avgCompTime = getAVGCompletionTime(tasksByClosed).getAsDouble();
+        double avgCompTime = getAVGCompletionTime(tasksByClosed).orElseThrow(() -> new NoSuchElementException("User has no completed tasks"));
         rabbitSenderMessage.sendMessageReport(excelReportService.createPerformerEfficiencyReportExcel(PerformerEfficiencyReport.builder()
-                .successfulImplementation((long) (taskByUser.size() - 1))
-                .AVGCompletionTime(avgCompTime)
-                .hiredTask((long) (taskByUser.size() - 1))
-                .userRating(getUserRating(avgCompTime, (taskByUser.size() - 1)))
-                .build(), "Эффективность_пользователя_" + username),
+                        .successfulImplementation((long) (tasksByClosed.size() - 1))
+                        .AVGCompletionTime(avgCompTime)
+                        .hiredTask((long) (taskByUser.size() - 1))
+                        .userRating(getUserRating(avgCompTime, (tasksByClosed.size() - 1)))
+                        .build(), "Эффективность_пользователя_" + username),
                 "Эффективность пользователя " + username, userEmail);
+
     }
 
-    private Double getUserRating(double avgCompTime, int successImplTask) {
-        return successImplTask / avgCompTime;
+    private Integer getUserRating(double avgCompTime, int successImplTask) {
+        double baseRating =  successImplTask / avgCompTime;
+
+        double minRating = 0.1;
+        double maxRating = 10;
+
+        return (int) Math.min(10.0, Math.max(1.0, 1 + (baseRating - minRating) / (maxRating - minRating) * 9));
     }
 
     private OptionalDouble getAVGCompletionTime(List<Task> tasks) {

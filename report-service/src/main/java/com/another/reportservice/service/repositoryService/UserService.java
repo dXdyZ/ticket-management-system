@@ -8,9 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -31,7 +29,7 @@ public class UserService {
         return userRepository.findAllByCreateDataBetween(start, end);
     }
 
-    public Users getUserByUsername(String username) throws ChangeSetPersister.NotFoundException {
-        return userRepository.findByUsername(username).orElseThrow(ChangeSetPersister.NotFoundException::new);
+    public Users getUserByUsername(String username) throws NoSuchElementException {
+        return userRepository.findByUsername(username).orElseThrow(() -> new NoSuchElementException("User not found"));
     }
 }

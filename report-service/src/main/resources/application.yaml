@@ -31,5 +31,5 @@ queue:
   name:
     SendMailReport: MessageSendMailReport
 path:
-  report: /home/another/dev/developering/ticket-management-system/report/
+  report: /home/another/Project/developering/ticket-management-system/report/
 

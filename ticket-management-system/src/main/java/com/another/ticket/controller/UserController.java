@@ -57,9 +57,9 @@ public class UserController {
     }
 
     @GetMapping("/report/efficiency/{username}")
-    public void getEfficiencyUserReport(@PathVariable String username,
+    public ResponseEntity<?> getEfficiencyUserReport(@PathVariable String username,
                                              Principal principal) {
-        userService.getEfficiencyUserReport(username, principal);
+        return userService.getEfficiencyUserReport(username, principal);
     }
 }
 

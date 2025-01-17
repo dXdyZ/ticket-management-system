@@ -31,8 +31,11 @@ eureka:
 server:
   port: 9292
 logging:
-  level:
-    com.rabbitmq: debug
   file:
     name: ticket-file.log
-
+  level:
+    org.telegram.telegrambots: debug
+telegram:
+  bot:
+    username: ticketPush_bot
+    token: 8022891713:AAGoOflt8i7VDqTep2HO6WTb6lRGvtSUSlY

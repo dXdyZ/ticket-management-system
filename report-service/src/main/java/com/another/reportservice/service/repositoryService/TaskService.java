@@ -6,9 +6,11 @@ import com.another.reportservice.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class TaskService {
@@ -25,10 +27,11 @@ public class TaskService {
         return taskRepository.findAllByCreateDateBetween(start, end);
     }
 
-    public List<Task> getTaskByUsername(String username, LocalDateTime start, LocalDateTime end) throws ChangeSetPersister.NotFoundException {
+    public List<Task> getTaskByUsername(String username, LocalDateTime start, LocalDateTime end) throws NoSuchElementException {
         return taskRepository.findAllByUsersAndCreateDateBetween(userService.getUserByUsername(username), start, end);
     }
 
+    @Transactional
     public List<Task> getTaskByClosedAndUsername(String username) {
         return taskRepository.findAllByStatusAndUsers_Username(Status.CLOSED, username);
     }

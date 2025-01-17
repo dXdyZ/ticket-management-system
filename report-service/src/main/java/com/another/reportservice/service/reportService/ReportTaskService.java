@@ -1,5 +1,6 @@
 package com.another.reportservice.service.reportService;
 
+import com.another.reportservice.custom_exception.FutureDateException;
 import com.another.reportservice.entity.Priority;
 import com.another.reportservice.entity.Status;
 import com.another.reportservice.entity.Task;
@@ -36,7 +37,7 @@ public class ReportTaskService {
         this.excelReportService = excelReportService;
     }
 
-    public void getAndSendProcessingTaskReport(String start, String end, String userEmail) {
+    public void getAndSendProcessingTaskReport(String start, String end, String userEmail) throws FutureDateException {
         List<LocalDateTime> date = MapDate.mapDate(start, end);
         List<Task> tasks = taskService.getTaskBetweenDate(date.get(0), date.get(1));
         rabbitSenderMessage.sendMessageReport(excelReportService.createTaskProcessingReportExcel(getProcessingTask(tasks),
@@ -52,24 +53,29 @@ public class ReportTaskService {
                     pr.setTaskId(task.getId());
                     pr.setTopic(task.getTopic());
                     pr.setStatus(task.getStatus());
-                    pr.setWorkerUsername(task.getWorkUser().getUsername());
-                    pr.setCreateDate(task.getCreateDate());
-                    pr.setOffToWorkTime(task.getInJobDate());
-                    pr.setClosed(task.getCloseDate());
-                    pr.setCompletedTime(String.format("%02d:%02d",
-                            Duration.between(pr.getOffToWorkTime(), pr.getClosed()).toHours(),
-                            Duration.between(pr.getOffToWorkTime(), pr.getClosed()).toMinutes() % 60));
+                    if (task.getWorkUser() != null) {
+                        pr.setWorkerUsername(task.getWorkUser().getUsername());
+                        pr.setCreateDate(task.getCreateDate());
+                        pr.setOffToWorkTime(task.getInJobDate());
+                        if (task.getCloseDate() != null) {
+                            pr.setClosed(task.getCloseDate());
+                            pr.setCompletedTime(String.format("%02d:%02d",
+                                    Duration.between(pr.getOffToWorkTime(), pr.getClosed()).toHours(),
+                                    Duration.between(pr.getOffToWorkTime(), pr.getClosed()).toMinutes() % 60));
+                        }
+                        return pr;
+                    }
                     return pr;
                 })
                 .toList();
     }
 
-    public void getReportNumberOfCreateTaskPeriod(String start, String end, String username, String userEmail) throws ChangeSetPersister.NotFoundException {
+    public void getReportNumberOfCreateTaskPeriod(String start, String end, String username, String userEmail) throws FutureDateException {
         List<LocalDateTime> dates = MapDate.mapDate(start, end);
         if (username == null) {
             List<Task> tasks = taskService.getTaskBetweenDate(dates.get(0), dates.get(1));
             rabbitSenderMessage.sendMessageReport(excelReportService.createTaskPeriodReportExcel(TaskPeriodReportEntity.builder()
-                    .quantityTask(Long.valueOf(tasks.size() + 1))
+                    .quantityTask((long) (tasks.size() + 1))
                     .createTaskByMonth(getTaskCountsByMonth(tasks))
                     .createTaskByPriority(getTaskCountsByPriority(tasks))
                     .getNowTaskByStatus(getTaskCountsByStatus(tasks))
@@ -78,7 +84,7 @@ public class ReportTaskService {
         } else {
             List<Task> tasks = taskService.getTaskByUsername(username, dates.get(0), dates.get(1));
             rabbitSenderMessage.sendMessageReport(excelReportService.createTaskPeriodReportExcel(TaskPeriodReportEntity.builder()
-                            .quantityTask(Long.valueOf(tasks.size() + 1))
+                            .quantityTask((long) (tasks.size() + 1))
                             .createTaskByMonth(getTaskCountsByMonth(tasks))
                             .createTaskByPriority(getTaskCountsByPriority(tasks))
                             .getNowTaskByStatus(getTaskCountsByStatus(tasks))
