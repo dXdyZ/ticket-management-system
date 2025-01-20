@@ -1,0 +1,5 @@
+package com.example.telegrambot.entity;
+
+public enum Role{
+    ROLE_CLIENT, ROLE_PERFORMER, ROLE_ADMIN;
+}

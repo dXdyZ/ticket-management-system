@@ -143,7 +143,7 @@
 
     // 2. Функция для загрузки данных задачи (GET /task/{id})
     function loadTask(taskId) {
-        fetch(`http://localhost:9191/task/${taskId}`, {
+        fetch(`http://localhost:9191/tasks/${taskId}`, {
             method: 'GET',
             credentials: 'include' // Для form-based auth (куки/сессия)
         })
@@ -175,7 +175,7 @@
 
     // 3. Функция для принятия задачи (POST /task/taskAcceptanceConfirmation/{id})
     function acceptTask(taskId) {
-        fetch(`http://localhost:9191/task/taskAcceptanceConfirmation/${taskId}`, {
+        fetch(`http://localhost:9191/tasks/taskAcceptanceConfirmation/${taskId}`, {
             method: 'POST',
             credentials: 'include'
         })

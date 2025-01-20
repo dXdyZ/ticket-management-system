@@ -5,6 +5,7 @@ import com.another.ticketmessageservice.mail.EmailIntegrationConfig;
 import com.another.ticketmessageservice.service.FileWriteAndReadService;
 import com.another.ticketmessageservice.service.StatusLogService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.mail.MessagingException;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -22,14 +23,16 @@ public class Receiver {
     private final EmailIntegrationConfig emailIntegrationConfig;
     private final FileWriteAndReadService fileWriteAndReadService;
     private final StatusLogService statusLogService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RabbitSenderMessage rabbitSenderMessage;
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     @Autowired
-    public Receiver(EmailIntegrationConfig emailIntegrationConfig,
-                    FileWriteAndReadService fileWriteService, StatusLogService statusLogService) {
+    public Receiver(EmailIntegrationConfig emailIntegrationConfig, FileWriteAndReadService fileWriteService,
+                    StatusLogService statusLogService, RabbitSenderMessage rabbitSenderMessage) {
         this.emailIntegrationConfig = emailIntegrationConfig;
         this.fileWriteAndReadService = fileWriteService;
         this.statusLogService = statusLogService;
+        this.rabbitSenderMessage = rabbitSenderMessage;
     }
 
     @RabbitListener(queues = "MessageSendMailReport")
@@ -49,10 +52,19 @@ public class Receiver {
         }
     }
 
-
     @RabbitListener(queues = "MessageEmailGetTaskInWork")
-    public void receiveMailGetTaskInWork(@Payload Task task) throws MessagingException {
-        emailIntegrationConfig.sendTaskMessage(task, task.getUsers().getEmail());
+    public void receiveMailGetTaskInWork(Message message) {
+        MessageProperties properties = message.getMessageProperties();
+        try {
+            if (properties.getHeaders().containsKey("CHAT_ID")) {
+                rabbitSenderMessage.sendBotMessage(message);
+            } else {
+                Task task = objectMapper.readValue(message.getBody(), Task.class);
+                emailIntegrationConfig.sendTaskMessage(task, task.getUsers().getEmail());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @RabbitListener(queues = "MessageSetStatusTask")

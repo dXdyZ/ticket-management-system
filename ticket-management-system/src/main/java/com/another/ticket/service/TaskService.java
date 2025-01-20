@@ -4,6 +4,7 @@ import com.another.ticket.entity.DTO.TaskDTO;
 import com.another.ticket.entity.Priority;
 import com.another.ticket.entity.Status;
 import com.another.ticket.entity.Task;
+import com.another.ticket.entity.Users;
 import com.another.ticket.rabbit.RabbitMessage;
 import com.another.ticket.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,7 +113,7 @@ public class TaskService {
         if (task.getStatus().equals(Status.OPEN)) {
             task.setWorkUser(userService.getUserByPrincipal(principal));
             task.setStatus(Status.AWAITING_RESPONSE);
-            rabbitMessage.sendMailGetTaskInWork(task);
+            rabbitMessage.sendMailGetTaskInWork(task, userService.getChatId(principal));
             return taskRepository.save(task);
         }
         return null;

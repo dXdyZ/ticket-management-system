@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: telegram-bot
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ticket
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: root
+    password: werpipl15
+telegram:
+  bot:
+    username: ticketPush_bot
+    token: 8022891713:AAGoOflt8i7VDqTep2HO6WTb6lRGvtSUSlY

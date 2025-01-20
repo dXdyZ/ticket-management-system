@@ -39,3 +39,5 @@ telegram:
   bot:
     username: ticketPush_bot
     token: 8022891713:AAGoOflt8i7VDqTep2HO6WTb6lRGvtSUSlY
+  queue:
+    SendMessageBot: MessageSendBot

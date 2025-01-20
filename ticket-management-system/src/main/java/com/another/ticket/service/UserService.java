@@ -49,6 +49,13 @@ public class UserService {
         return userRepository.findByUsername(principal.getName()).get();
     }
 
+    public Long getChatId(Principal principal) {
+        return Optional.ofNullable(getUserByPrincipal(principal))
+                .map(Users::getBotChatId)
+                .orElse(null);
+    }
+
+
     public void deleteUserByName(Long id) {
         userRepository.deleteById(id);
     }

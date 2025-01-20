@@ -1,6 +1,7 @@
 package com.another.ticket.rabbit;
 
 import com.another.ticket.entity.Task;
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,8 +28,17 @@ public class RabbitMessage {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public void sendMailGetTaskInWork(Task task) {
-        rabbitTemplate.convertAndSend(sendMailGetTaskInWork, task);
+    public void sendMailGetTaskInWork(Task task, Long chatId) {
+        if (chatId == null) {
+            rabbitTemplate.convertAndSend(sendMailGetTaskInWork, task);
+        } else {
+            rabbitTemplate.convertAndSend(sendMailGetTaskInWork, task,
+                    message -> {
+                        MessageProperties properties = message.getMessageProperties();
+                        properties.setHeader("CHAT_ID", chatId);
+                        return message;
+                    });
+        }
     }
 
     public void sendCreateTask(Task task) {

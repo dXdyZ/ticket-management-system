@@ -12,6 +12,9 @@ public class RabbitConfig {
     @Value("${queue.name.emailGetTaskInWork}")
     private String emailGetTaskInWork;
 
+    @Value("${queue.name.SendBotMessage}")
+    private String botMessage;
+
     @Value("${queue.name.CreateTask}")
     private String createTask;
 
@@ -41,6 +44,11 @@ public class RabbitConfig {
     @Bean
     public Queue sendMailCreateTask() {
         return new Queue(createTask, false);
+    }
+
+    @Bean
+    public Queue sendBotMessage() {
+        return new Queue(botMessage, false);
     }
 
     @Bean

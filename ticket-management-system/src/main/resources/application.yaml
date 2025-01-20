@@ -30,3 +30,4 @@ queue:
     SetStatusTask: MessageSetStatusTask
     GetStatusLog: MessageGetStatusLogData
     SendMailReport: MessageSendMailReport
+    SendBotMessage: MessageSendBot

@@ -30,7 +30,6 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.telegram:telegrambots-spring-boot-starter:6.9.7.1'
     implementation 'net.andreinc:mockneat:0.4.8'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'org.springframework.boot:spring-boot-starter-amqp'

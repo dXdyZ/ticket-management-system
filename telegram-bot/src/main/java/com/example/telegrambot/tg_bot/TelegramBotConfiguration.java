@@ -1,4 +1,4 @@
-package com.another.ticketmessageservice.tg_bot;
+package com.example.telegrambot.tg_bot;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
