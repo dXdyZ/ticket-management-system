@@ -29,7 +29,6 @@ class RabbitMessageTest {
                 .status(Status.OPEN)
                 .users(Users.builder()
                         .id(1L)
-                        .botChatId(12312L)
                         .email("hello@hello.com")
                         .username("hello")
                         .password("hello")

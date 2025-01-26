@@ -1,13 +1,16 @@
 package com.example.telegrambot.rabbit;
 
 import com.example.telegrambot.entity.Task;
-import com.example.telegrambot.tg_bot.PushTelegramBot;
+import com.example.telegrambot.entity.dto.CommentDTO;
+import com.example.telegrambot.telegram_bot.CommentTgBotService;
+import com.example.telegrambot.telegram_bot.TaskTgBotService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -16,22 +19,29 @@ import java.io.IOException;
 public class Receiver {
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-    private final PushTelegramBot pushTelegramBot;
+    private final TaskTgBotService taskTgBotService;
+    private final CommentTgBotService commentTgBotService;
 
     @Autowired
-    public Receiver(PushTelegramBot pushTelegramBot) {
-        this.pushTelegramBot = pushTelegramBot;
+    public Receiver(TaskTgBotService taskTgBotService, CommentTgBotService commentTgBotService) {
+        this.taskTgBotService = taskTgBotService;
+        this.commentTgBotService = commentTgBotService;
     }
 
     @RabbitListener(queues = "MessageSendBot")
-    public void sendUserMessage(Message message) {
+    public void receiveUserMessage(Message message) {
         MessageProperties properties = message.getMessageProperties();
         Long chatId = properties.getHeader("CHAT_ID");
         try {
             Task task = objectMapper.readValue(message.getBody(), Task.class);
-            pushTelegramBot.confirmTaskMessage(chatId, task);
+            taskTgBotService.confirmTaskMessage(chatId, task);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @RabbitListener(queues = "MessageComment")
+    public void receiveCommentMessage(@Payload CommentDTO commentDTO) {
+        commentTgBotService.sendCommentMessage(commentDTO);
     }
 }

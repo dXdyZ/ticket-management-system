@@ -2,6 +2,8 @@ package com.another.ticket.controller;
 
 import com.another.ticket.entity.DTO.TaskDTO;
 import com.another.ticket.entity.Task;
+import com.another.ticket.exception.ValidStatusException;
+import com.another.ticket.service.CommentService;
 import com.another.ticket.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
@@ -11,17 +13,19 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static org.springframework.http.HttpStatus.CREATED;
-
 
 @RestController
 @RequestMapping("/tasks")
 public class TaskController {
+    private final CommentService commentService;
     private final TaskService taskService;
 
     @Autowired
-    public TaskController(TaskService taskService) {
+    public TaskController(CommentService commentService, TaskService taskService) {
+        this.commentService = commentService;
         this.taskService = taskService;
     }
 
@@ -36,7 +40,7 @@ public class TaskController {
     public ResponseEntity<?> getByFilter(@RequestParam(name = "status", required = false) List<String> status,
                                   @RequestParam(name = "priority", required = false) List<String> priority,
                                   @RequestParam(name = "username", required = false) String username,
-                                  @RequestParam(name = "creteDate", required = false) String createDate,
+                                  @RequestParam(name = "createDate", required = false) String createDate,
                                   @RequestParam(name = "endDate", required = false) String endDate){
         if(status == null) {
             status = List.of();
@@ -58,7 +62,7 @@ public class TaskController {
             if (task != null) {
                 return ResponseEntity.ok(taskService.takeInWorkTask(id, principal));
             } else return new ResponseEntity<>("Task busy", HttpStatus.CONFLICT);
-        } catch (ChangeSetPersister.NotFoundException e) {
+        } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
@@ -68,7 +72,7 @@ public class TaskController {
                                           @RequestBody String status, Principal principal) {
         try {
             return ResponseEntity.ok(taskService.setStatus(id, status, principal));
-        } catch (ChangeSetPersister.NotFoundException e) {
+        } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
@@ -82,8 +86,8 @@ public class TaskController {
     @GetMapping("/{id}")
     public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(taskService.getById(id));
-        } catch (ChangeSetPersister.NotFoundException e) {
+            return ResponseEntity.ok(taskService.getTaskById(id));
+        } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
@@ -91,6 +95,18 @@ public class TaskController {
     @GetMapping("/my")
     public List<Task> getAllByUserTask(Principal principal) {
         return taskService.getAllTaskByUser(principal);
+    }
+
+    @PostMapping("/comments/{id}")
+    public ResponseEntity<?> addComment(@PathVariable Long id, @RequestBody String commentText, Principal principal) {
+        try {
+            commentService.addComment(id, commentText, principal);
+            return new ResponseEntity<>(CREATED);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (ValidStatusException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/report/period/{start}/{end}")

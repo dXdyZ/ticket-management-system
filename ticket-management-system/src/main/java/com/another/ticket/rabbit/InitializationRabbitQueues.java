@@ -16,6 +16,7 @@ public class InitializationRabbitQueues {
     private final Queue queueGetStatusLogData;
     private final Queue queueSendMailReport;
     private final Queue queueSendMessageBot;
+    private final Queue queueSendCommentMessage;
 
     @Autowired
     public InitializationRabbitQueues(RabbitAdmin rabbitAdmin,
@@ -24,7 +25,8 @@ public class InitializationRabbitQueues {
                                       @Qualifier("sendMailSetStatusTask") Queue queueSetStatusTask,
                                       @Qualifier("getStatusLogQueue") Queue queueGetStatusLogData,
                                       @Qualifier("sendMailReport") Queue queueSendMailReport,
-                                      @Qualifier("sendBotMessage") Queue queueSendMessageBot) {
+                                      @Qualifier("sendBotMessage") Queue queueSendMessageBot,
+                                      @Qualifier("sendMessageComment") Queue queueSendCommentMessage) {
         this.rabbitAdmin = rabbitAdmin;
         this.queueEmailTaskInWork = queueEmailTaskInWork;
         this.queueCreateTask = queueCreateTask;
@@ -32,6 +34,7 @@ public class InitializationRabbitQueues {
         this.queueGetStatusLogData = queueGetStatusLogData;
         this.queueSendMailReport = queueSendMailReport;
         this.queueSendMessageBot = queueSendMessageBot;
+        this.queueSendCommentMessage = queueSendCommentMessage;
     }
 
     @PostConstruct
@@ -42,5 +45,6 @@ public class InitializationRabbitQueues {
         rabbitAdmin.declareQueue(queueGetStatusLogData);
         rabbitAdmin.declareQueue(queueSendMailReport);
         rabbitAdmin.declareQueue(queueSendMessageBot);
+        rabbitAdmin.declareQueue(queueSendCommentMessage);
     }
 }

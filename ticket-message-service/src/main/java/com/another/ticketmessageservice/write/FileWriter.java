@@ -1,5 +1,6 @@
 package com.another.ticketmessageservice.write;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
@@ -15,6 +16,9 @@ import java.io.File;
 @Configuration
 @EnableIntegration
 public class FileWriter {
+
+    @Value("${file.log}")
+    private String pathToLog;
 
     /**
      * Канал для отправки сообщений чтобы они записывались в файл

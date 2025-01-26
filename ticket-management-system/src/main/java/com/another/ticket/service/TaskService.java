@@ -4,11 +4,13 @@ import com.another.ticket.entity.DTO.TaskDTO;
 import com.another.ticket.entity.Priority;
 import com.another.ticket.entity.Status;
 import com.another.ticket.entity.Task;
-import com.another.ticket.entity.Users;
 import com.another.ticket.rabbit.RabbitMessage;
 import com.another.ticket.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -23,22 +25,27 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class TaskService {
     private final TaskRepository taskRepository;
     private final UserService userService;
+    private final UserBotService userBotService;
     private final RabbitMessage rabbitMessage;
+    private final TaskCacheProxyService taskCacheService;
     private final RestTemplate restTemplate;
     private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy.MM.dd");
     private final String mainUrl = "http://report-service/tasks";
 
     @Autowired
-    public TaskService(TaskRepository taskRepository, UserService userService,
-                       RabbitMessage rabbitMessage, RestTemplate restTemplate) {
+    public TaskService(TaskRepository taskRepository, UserService userService, UserBotService userBotService,
+                       RabbitMessage rabbitMessage, TaskCacheProxyService taskCacheService, RestTemplate restTemplate) {
         this.taskRepository = taskRepository;
         this.userService = userService;
+        this.userBotService = userBotService;
         this.rabbitMessage = rabbitMessage;
+        this.taskCacheService = taskCacheService;
         this.restTemplate = restTemplate;
     }
 
@@ -79,6 +86,12 @@ public class TaskService {
     }
 
     @Transactional
+    @Cacheable(value = "tasksFilters",
+            key = "{#status ?: T(java.util.Collections).emptyList(), " +
+                    "#priority ?: T(java.util.Collections).emptyList(), " +
+                    "#username ?: '', " +
+                    "#startDate ?: '', " +
+                    "#endDate ?: ''}")
     public List<Task> getTasksFiltered(List<String> status, List<String> priority,
                                        String username, String startDate, String endDate) throws RuntimeException {
         Specification<Task> spec = Specification.where(null);
@@ -106,22 +119,38 @@ public class TaskService {
     }
 
 
-    //Ограничить доступ в security всем кроме исполнителей
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "tasksFilters", allEntries = true),
+                    @CacheEvict(value = "taskById", key = "#id")
+            },
+            put = {
+                    @CachePut(value = "taskById", key = "#id")
+            }
+    )
     @Transactional
-    public Task takeInWorkTask(Long id, Principal principal) throws ChangeSetPersister.NotFoundException {
-        Task task = taskRepository.findById(id).orElseThrow(ChangeSetPersister.NotFoundException::new);
+    public Task takeInWorkTask(Long id, Principal principal) throws NoSuchElementException {
+        Task task = getTaskById(id);
         if (task.getStatus().equals(Status.OPEN)) {
             task.setWorkUser(userService.getUserByPrincipal(principal));
             task.setStatus(Status.AWAITING_RESPONSE);
-            rabbitMessage.sendMailGetTaskInWork(task, userService.getChatId(principal));
+            rabbitMessage.sendMailGetTaskInWork(task, userBotService.getChatId(task.getUsers().getUsername()));
             return taskRepository.save(task);
         }
         return null;
     }
 
     @Transactional
-    public Task setStatus(Long id, String status, Principal principal) throws ChangeSetPersister.NotFoundException {
-        Task task = taskRepository.findById(id).orElseThrow(ChangeSetPersister.NotFoundException::new);
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "tasksFilters", allEntries = true), //Все фильтры зависятот статуса
+            },
+            put = {
+                    @CachePut(value = "taskById", key = "#id") //Обновление кеша по id
+            }
+    )
+    public Task setStatus(Long id, String status, Principal principal) throws NoSuchElementException {
+        Task task = getTaskById(id);
         if (task.getWorkUser().getUsername().equalsIgnoreCase(principal.getName()) ||
                 task.getUsers().getUsername().equalsIgnoreCase(principal.getName())) {
             if (status.equalsIgnoreCase("CLOSE")) {
@@ -143,8 +172,25 @@ public class TaskService {
         return null;
     }
 
+    @Transactional
+    public void taskAcceptanceConfirmation(Long id, Principal principal) {
+        try {
+            setStatus(id, "in job", principal);
+        } catch (NoSuchElementException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     //Ограничить доступ в security всем кроме клиентов
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "tasksFilters", allEntries = true) //фильтры могут включать новую задачу
+            },
+            put = {
+                    @CachePut(value = "taskById", key = "#result.id")
+            }
+    )
     public Task createTask(TaskDTO bidDTO, Principal principal) {
         Task task = taskRepository.save(Task.builder()
                 .topic(bidDTO.getTopic())
@@ -158,10 +204,6 @@ public class TaskService {
         return task;
     }
 
-    public Task getById(Long id) throws ChangeSetPersister.NotFoundException {
-        return taskRepository.findById(id).orElseThrow(ChangeSetPersister.NotFoundException::new);
-
-    }
 
     public List<Task> getAllTaskByUser(Principal principal) {
         return taskRepository.findAllByUsers_Id(userService.getUserByPrincipal(principal).getId());
@@ -184,12 +226,8 @@ public class TaskService {
         return !priorities.isEmpty() ? priorities : null;
     }
 
-    public void taskAcceptanceConfirmation(Long id, Principal principal) {
-        try {
-            setStatus(id, "in job", principal);
-        } catch (ChangeSetPersister.NotFoundException e) {
-            throw new RuntimeException(e);
-        }
+    public Task getTaskById(Long id) throws NoSuchElementException {
+        return taskCacheService.getById(id);
     }
 
     private List<Status> mapStringInStatus(List<String> status) {

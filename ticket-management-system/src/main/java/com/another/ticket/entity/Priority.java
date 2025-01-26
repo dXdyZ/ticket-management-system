@@ -1,5 +1,7 @@
 package com.another.ticket.entity;
 
-public enum Priority {
+import java.io.Serializable;
+
+public enum Priority implements Serializable {
     LOW, MID, HIGH
 }

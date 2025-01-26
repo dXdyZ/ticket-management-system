@@ -1,8 +1,10 @@
 package com.another.ticket.service;
 
 import com.another.ticket.entity.DTO.UserRegDTO;
+import com.another.ticket.entity.UserBot;
 import com.another.ticket.entity.Users;
 import com.another.ticket.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpMethod;
@@ -15,21 +17,26 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.Principal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Optional;
 
+
+@Slf4j
 @Service
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RestTemplate restTemplate;
+    private final UserBotService userBotService;
     private final String mainUrl = "http://report-service/users";
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RestTemplate restTemplate) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                       RestTemplate restTemplate, UserBotService userBotService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.restTemplate = restTemplate;
+        this.userBotService = userBotService;
     }
 
     public ResponseEntity<?> registerUser(UserRegDTO userRegDTO) {
@@ -40,7 +47,7 @@ public class UserService {
                     .email(userRegDTO.getEmail())
                     .role(userRegDTO.getRole())
                     .password(passwordEncoder.encode(userRegDTO.getPassword()))
-                    .createData(LocalDateTime.now())
+                    .createData(LocalDate.now())
                     .build()), HttpStatus.CREATED);
         } else return new ResponseEntity<>("Пользователь с таким именем уже существует", HttpStatus.CONFLICT);
     }
@@ -48,13 +55,6 @@ public class UserService {
     public Users getUserByPrincipal(Principal principal) {
         return userRepository.findByUsername(principal.getName()).get();
     }
-
-    public Long getChatId(Principal principal) {
-        return Optional.ofNullable(getUserByPrincipal(principal))
-                .map(Users::getBotChatId)
-                .orElse(null);
-    }
-
 
     public void deleteUserByName(Long id) {
         userRepository.deleteById(id);

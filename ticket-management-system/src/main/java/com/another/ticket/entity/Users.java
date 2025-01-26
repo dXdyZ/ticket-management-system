@@ -1,6 +1,5 @@
 package com.another.ticket.entity;
 
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -11,7 +10,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -19,7 +19,9 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Users {
+public class Users implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -32,7 +34,7 @@ public class Users {
     @Email
     private String email;
 
-    //Убираем это поле из ответов
+    // Убираем это поле из ответов
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
@@ -40,10 +42,12 @@ public class Users {
     @OneToMany(cascade = CascadeType.ALL)
     private List<Task> task;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private UserBot userBot;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    private Long botChatId;
-
-    private LocalDateTime createData;
+    private LocalDate createData;
 }

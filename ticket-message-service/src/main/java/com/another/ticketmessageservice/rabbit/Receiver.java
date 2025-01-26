@@ -1,21 +1,20 @@
 package com.another.ticketmessageservice.rabbit;
 
+import com.another.ticketmessageservice.entity.CommentDTO;
 import com.another.ticketmessageservice.entity.Task;
 import com.another.ticketmessageservice.mail.EmailIntegrationConfig;
 import com.another.ticketmessageservice.service.FileWriteAndReadService;
 import com.another.ticketmessageservice.service.StatusLogService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jakarta.mail.MessagingException;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConversionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 
 
 @Component
@@ -24,15 +23,16 @@ public class Receiver {
     private final FileWriteAndReadService fileWriteAndReadService;
     private final StatusLogService statusLogService;
     private final RabbitSenderMessage rabbitSenderMessage;
-    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private final Jackson2JsonMessageConverter jackson2JsonMessageConverter;
 
     @Autowired
     public Receiver(EmailIntegrationConfig emailIntegrationConfig, FileWriteAndReadService fileWriteService,
-                    StatusLogService statusLogService, RabbitSenderMessage rabbitSenderMessage) {
+                    StatusLogService statusLogService, RabbitSenderMessage rabbitSenderMessage, Jackson2JsonMessageConverter jackson2JsonMessageConverter) {
         this.emailIntegrationConfig = emailIntegrationConfig;
         this.fileWriteAndReadService = fileWriteService;
         this.statusLogService = statusLogService;
         this.rabbitSenderMessage = rabbitSenderMessage;
+        this.jackson2JsonMessageConverter = jackson2JsonMessageConverter;
     }
 
     @RabbitListener(queues = "MessageSendMailReport")
@@ -40,15 +40,22 @@ public class Receiver {
         MessageProperties messageProperties = message.getMessageProperties();
         String userEmail = messageProperties.getHeader("USER_EMAIL");
         String topicReport = messageProperties.getHeader("TOPIC_REPORT");
+
+        String pathToFile = (String) jackson2JsonMessageConverter.fromMessage(message);
         try {
-            String pathToFile = objectMapper.readValue(message.getBody(), String.class);
-            try {
-                emailIntegrationConfig.sendReport(fileWriteAndReadService.fileRead(pathToFile), userEmail, topicReport);
-            } catch (FileNotFoundException ex) {
-                emailIntegrationConfig.sendBugReportForUser(userEmail);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            emailIntegrationConfig.sendReport(fileWriteAndReadService.fileRead(pathToFile), userEmail, topicReport);
+        } catch (FileNotFoundException ex) {
+            emailIntegrationConfig.sendBugReportForUser(userEmail);
+        }
+    }
+
+    @RabbitListener(queues = "MessageComment")
+    public void receiveCommentMessage(Message message) {
+        CommentDTO commentDTO = (CommentDTO) jackson2JsonMessageConverter.fromMessage(message);
+        if (commentDTO.getChatId() != null) {
+            rabbitSenderMessage.sendBotMessage(message);
+        } else {
+            emailIntegrationConfig.sendComment(commentDTO);
         }
     }
 
@@ -59,10 +66,10 @@ public class Receiver {
             if (properties.getHeaders().containsKey("CHAT_ID")) {
                 rabbitSenderMessage.sendBotMessage(message);
             } else {
-                Task task = objectMapper.readValue(message.getBody(), Task.class);
+                Task task = (Task) jackson2JsonMessageConverter.fromMessage(message);
                 emailIntegrationConfig.sendTaskMessage(task, task.getUsers().getEmail());
             }
-        } catch (IOException e) {
+        } catch (MessageConversionException e) {
             throw new RuntimeException(e);
         }
     }

@@ -1,6 +1,9 @@
 package com.another.ticket.rabbit;
 
+import com.another.ticket.entity.DTO.CommentDTO;
 import com.another.ticket.entity.Task;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +11,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
 
 @Service
 public class RabbitMessage {
@@ -22,6 +28,9 @@ public class RabbitMessage {
 
     @Value("${queue.name.SetStatusTask}")
     private String sendSetStatusTask;
+
+    @Value("${queue.name.SendCommentMessage}")
+    private String sendCommentMessage;
 
     @Autowired
     public RabbitMessage(RabbitTemplate rabbitTemplate) {
@@ -39,6 +48,10 @@ public class RabbitMessage {
                         return message;
                     });
         }
+    }
+
+    public void sendCommentMessage(CommentDTO commentDTO) {
+        rabbitTemplate.convertAndSend(sendCommentMessage, commentDTO);
     }
 
     public void sendCreateTask(Task task) {

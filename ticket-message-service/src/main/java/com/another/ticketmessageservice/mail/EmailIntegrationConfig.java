@@ -1,5 +1,6 @@
 package com.another.ticketmessageservice.mail;
 
+import com.another.ticketmessageservice.entity.CommentDTO;
 import com.another.ticketmessageservice.entity.Task;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -29,13 +30,18 @@ public class EmailIntegrationConfig {
         this.templateEngine = templateEngine;
     }
 
-
     public void sendReport(File report, String email, String topic) {
         createEmailMessage(null, email, topic, null, report);
     }
 
     public void sendBugReportForUser(String userEmail) {
         createEmailMessage(new Context(), userEmail, "Ошибка во время создания отчета", "bug_report.html", null);
+    }
+
+    public void sendComment(CommentDTO commentDTO) {
+        Context context = new Context();
+        context.setVariable("commentDto", commentDTO);
+        createEmailMessage(context, commentDTO.getEmail(), "Коментарий к задаче", "comment.html", null);
     }
 
     public void sendTaskMessage(Task task, String recipientEmail) {

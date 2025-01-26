@@ -11,6 +11,7 @@ spring:
     port: 5672
     username: root
     password: werpipl15
+# Добавить подлключение к eureka
 telegram:
   bot:
     username: ticketPush_bot

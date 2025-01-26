@@ -18,11 +18,19 @@ spring:
     redis:
       port: 6379
       host: localhost
+      timeout: 2000ms # Таймаут подключения (2 секунды)
+      database: 0 # Номер базы данных (по умолчанию 0)
+  cache:
+    type: redis # Указываем, что используем Redis для кеширования
+    redis:
+      time-to-live: 5m # Время жизни записей в кеше (5 минут)
+      cache-null-values: false # Не кешировать null-значения
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
 server:
   port: 9191
-logging:
-  level:
-    org.springframework.security: debug
 queue:
   name:
     emailGetTaskInWork: MessageEmailGetTaskInWork
@@ -31,3 +39,4 @@ queue:
     GetStatusLog: MessageGetStatusLogData
     SendMailReport: MessageSendMailReport
     SendBotMessage: MessageSendBot
+    SendCommentMessage: MessageComment

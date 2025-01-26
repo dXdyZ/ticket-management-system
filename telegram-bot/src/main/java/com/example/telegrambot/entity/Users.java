@@ -33,7 +33,5 @@ public class Users {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    private Long botChatId;
-
     private LocalDate createData;
 }

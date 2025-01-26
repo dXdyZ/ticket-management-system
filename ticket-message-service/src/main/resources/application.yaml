@@ -22,22 +22,15 @@ spring:
     properties:
       mail.smtp.auth: true
       mail.smtp.ssl.enable: true
-eureka:
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka
 server:
   port: 9292
 logging:
   file:
     name: ticket-file.log
   level:
-    org.telegram.telegrambots: debug
+    org.springframework.amqp: debug
+file:
+  log: /home/another/Project/developering/ticket-management-system/log
 telegram:
-  bot:
-    username: ticketPush_bot
-    token: 8022891713:AAGoOflt8i7VDqTep2HO6WTb6lRGvtSUSlY
   queue:
     SendMessageBot: MessageSendBot

@@ -1,5 +1,6 @@
 package com.another.reportservice.controller;
 
+import com.another.reportservice.custom_exception.FutureDateException;
 import com.another.reportservice.service.reportService.ReportTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
@@ -23,14 +24,14 @@ public class TaskReportController {
                                                         @PathVariable String userEmail,
                                                         @PathVariable String end,
                                                         @RequestParam(name = "username", required = false) String username)
-            throws ChangeSetPersister.NotFoundException, ExecutionException, InterruptedException {
+            throws FutureDateException {
         reportTaskService.getReportNumberOfCreateTaskPeriod(start, end, username, userEmail);
     }
 
     @GetMapping("/processing/{start}/{end}/{userEmail}")
     public void getTaskProcessingReport(@PathVariable String start,
                                     @PathVariable String end,
-                                    @PathVariable String userEmail) {
+                                    @PathVariable String userEmail) throws FutureDateException {
         reportTaskService.getAndSendProcessingTaskReport(start, end, userEmail);
     }
 }

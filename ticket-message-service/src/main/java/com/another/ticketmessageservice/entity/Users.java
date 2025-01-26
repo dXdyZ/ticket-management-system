@@ -34,7 +34,5 @@ public class Users {
 
     private Role role;
 
-    private Long botChatId;
-
     private LocalDate createData;
 }

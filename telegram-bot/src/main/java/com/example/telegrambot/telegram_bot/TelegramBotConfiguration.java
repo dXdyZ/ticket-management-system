@@ -1,4 +1,4 @@
-package com.example.telegrambot.tg_bot;
+package com.example.telegrambot.telegram_bot;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
