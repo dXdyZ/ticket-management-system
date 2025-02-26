@@ -30,6 +30,9 @@ public class RabbitConfig {
     @Value("${queue.name.SendCommentMessage}")
     private String sendMessageComment;
 
+    @Value("${queue.name.RequestReport}")
+    private String sendMessageRequestReport;
+
     @Value("${spring.rabbitmq.username}")
     private String username;
 
@@ -47,6 +50,11 @@ public class RabbitConfig {
     @Bean
     public Queue sendMessageComment() {
         return new Queue(sendMessageComment, false);
+    }
+
+    @Bean
+    public Queue sendMessageRequestReport() {
+        return new Queue(sendMessageRequestReport, false);
     }
 
     @Bean

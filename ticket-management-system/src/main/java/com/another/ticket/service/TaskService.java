@@ -1,5 +1,6 @@
 package com.another.ticket.service;
 
+import com.another.ticket.entity.DTO.RequestReportDTO;
 import com.another.ticket.entity.DTO.TaskDTO;
 import com.another.ticket.entity.Priority;
 import com.another.ticket.entity.Status;
@@ -34,19 +35,16 @@ public class TaskService {
     private final UserBotService userBotService;
     private final RabbitMessage rabbitMessage;
     private final TaskCacheProxyService taskCacheService;
-    private final RestTemplate restTemplate;
     private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy.MM.dd");
-    private final String mainUrl = "http://report-service/tasks";
 
     @Autowired
     public TaskService(TaskRepository taskRepository, UserService userService, UserBotService userBotService,
-                       RabbitMessage rabbitMessage, TaskCacheProxyService taskCacheService, RestTemplate restTemplate) {
+                       RabbitMessage rabbitMessage, TaskCacheProxyService taskCacheService) {
         this.taskRepository = taskRepository;
         this.userService = userService;
         this.userBotService = userBotService;
         this.rabbitMessage = rabbitMessage;
         this.taskCacheService = taskCacheService;
-        this.restTemplate = restTemplate;
     }
 
     public List<Task> getTaskByStatus(List<String> status) {
@@ -250,20 +248,20 @@ public class TaskService {
     }
 
     public void getTaskReportForPeriod(String start, String end, String username, Principal principal) {
-        String url = UriComponentsBuilder.fromUriString(mainUrl)
-                .pathSegment("period", start, end, userService.getUserByPrincipal(principal).getEmail())
-                .toUriString();
-        if (username != null) {
-            url = url + "?username=" + username;
-        }
-        restTemplate.getForObject(url, Void.class);
+        RequestReportDTO requestReportDTO = RequestReportDTO.builder()
+                .start(start)
+                .end(end)
+                .email(userService.getUserByPrincipal(principal).getEmail())
+                .build();
+        if (username != null) requestReportDTO.setUsername(username);
+        rabbitMessage.sendRequestReportMessage(requestReportDTO, "task_period");
     }
 
     public void getReportTaskProcessing(String start, String end, Principal principal) {
-        restTemplate.getForObject(
-                UriComponentsBuilder.fromUriString(mainUrl)
-                .pathSegment("processing", start, end, userService.getUserByPrincipal(principal).getEmail())
-                        .toUriString(),
-                Void.class);
+        rabbitMessage.sendRequestReportMessage(RequestReportDTO.builder()
+                        .email(userService.getUserByPrincipal(principal).getEmail())
+                        .end(end)
+                        .start(start)
+                .build(), "task_processing");
     }
 }

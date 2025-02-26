@@ -1,6 +1,7 @@
 package com.another.ticket.rabbit;
 
 import com.another.ticket.entity.DTO.CommentDTO;
+import com.another.ticket.entity.DTO.RequestReportDTO;
 import com.another.ticket.entity.Task;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -32,6 +33,9 @@ public class RabbitMessage {
     @Value("${queue.name.SendCommentMessage}")
     private String sendCommentMessage;
 
+    @Value("${queue.name.RequestReport}")
+    private String sendRequestReportMessage;
+
     @Autowired
     public RabbitMessage(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
@@ -48,6 +52,15 @@ public class RabbitMessage {
                         return message;
                     });
         }
+    }
+
+    public void  sendRequestReportMessage(RequestReportDTO requestReportDTO, String typeReport) {
+        rabbitTemplate.convertAndSend(sendRequestReportMessage, requestReportDTO,
+                message -> {
+            MessageProperties properties = message.getMessageProperties();
+            properties.setHeader("REPORT_TYPE", typeReport);
+            return message;
+                });
     }
 
     public void sendCommentMessage(CommentDTO commentDTO) {

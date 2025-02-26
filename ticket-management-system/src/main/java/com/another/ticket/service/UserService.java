@@ -1,8 +1,10 @@
 package com.another.ticket.service;
 
+import com.another.ticket.entity.DTO.RequestReportDTO;
 import com.another.ticket.entity.DTO.UserRegDTO;
 import com.another.ticket.entity.UserBot;
 import com.another.ticket.entity.Users;
+import com.another.ticket.rabbit.RabbitMessage;
 import com.another.ticket.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,17 +28,14 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RestTemplate restTemplate;
-    private final UserBotService userBotService;
-    private final String mainUrl = "http://report-service/users";
+    private final RabbitMessage rabbitMessage;
 
     @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                       RestTemplate restTemplate, UserBotService userBotService) {
+                      RabbitMessage rabbitMessage) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.restTemplate = restTemplate;
-        this.userBotService = userBotService;
+        this.rabbitMessage = rabbitMessage;
     }
 
     public ResponseEntity<?> registerUser(UserRegDTO userRegDTO) {
@@ -77,29 +76,17 @@ public class UserService {
     }
 
     public void getCreateUserReportForPeriod(String start, String end, Principal principal) {
-        restTemplate.getForObject(
-                UriComponentsBuilder.fromUriString(mainUrl)
-                .pathSegment("period", start, end, getUserByPrincipal(principal).getEmail())
-                    .toUriString(),
-                Void.class);
+        rabbitMessage.sendRequestReportMessage(RequestReportDTO.builder()
+                        .start(start)
+                        .end(end)
+                        .email(getUserByPrincipal(principal).getEmail())
+                .build(), "user_period");
     }
 
-    public ResponseEntity<?> getEfficiencyUserReport(String username, Principal principal) {
-        try {
-            restTemplate.exchange(
-                    UriComponentsBuilder.fromUriString(mainUrl)
-                            .pathSegment("efficiency", username, getUserByPrincipal(principal).getEmail())
-                            .toUriString(),
-                    HttpMethod.GET,
-                    null,
-                    String.class);
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        } catch (HttpClientErrorException.NotFound e) {
-            if ("User has no completed tasks".equals(e.getResponseBodyAsString())) {
-                return new ResponseEntity<>("User has no completed tasks", HttpStatus.NOT_FOUND);
-            } else {
-                return new ResponseEntity<>("User not found: " + username, HttpStatus.NOT_FOUND);
-            }
-        }
+    public void getEfficiencyUserReport(String username, Principal principal) {
+        rabbitMessage.sendRequestReportMessage(RequestReportDTO.builder()
+                        .email(getUserByPrincipal(principal).getEmail())
+                        .username(username)
+                .build(), "user_efficiency");
     }
 }

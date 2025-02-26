@@ -40,3 +40,4 @@ queue:
     SendMailReport: MessageSendMailReport
     SendBotMessage: MessageSendBot
     SendCommentMessage: MessageComment
+    RequestReport: MessageRequestReport
